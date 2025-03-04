@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-    "io/ioutil"
+	"io/ioutil"
+	"os"
 	"seahorse/lexer"
 	"seahorse/parser"
 	"seahorse/transpiler"
-	"os"
 )
 
 func main() {
@@ -18,25 +18,26 @@ func main() {
 	}
 
 	input_file, err := ioutil.ReadFile(args[1])
-    if err != nil {
-        fmt.Println("Could not read input file.")
-   		return
-    }
+	if err != nil {
+		fmt.Println("Could not read input file.")
+		return
+	}
 
-    input := string(input_file)
+	input := string(input_file)
 	tokens := lexer.Lexer(input, args[1])
+	// fmt.Println(tokens)
 	p := parser.NewParser(tokens)
-	ast := p.Parse()
+	ast := p.Parse(false)
 	if ast == nil {
-		err := p.Err;
+		err := p.Err
 		fmt.Printf("Syntax error at %s:%d:%d near %s\n",
-					err.Filename, err.Line, err.Col, err.Near);
+			err.Filename, err.Line, err.Col, err.Near)
 		fmt.Printf("    %s\n", err.Message)
 		return
 	}
 	i := transpiler.NewInstance(ast)
 
-	x := i.Transpile(fmt.Sprintf("%s.lua", args[1]));
+	x := i.Transpile(fmt.Sprintf("%s.lua", args[1]))
 
 	// Write transpiled result to file
 	file, err := os.Create(x.Filename)

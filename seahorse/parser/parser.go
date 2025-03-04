@@ -290,7 +290,7 @@ func (p *Parser) parseIfStatement() *Node {
 	expr := p.parseExpression(0)
 	p.expectToken(token.TOKEN_OPENCURLY)
 	p.consume()
-	block := p.Parse()
+	block := p.Parse(true)
 	if block == nil { return nil }
 	p.expectToken(token.TOKEN_CLOSECURLY)
 	p.consume()
@@ -306,7 +306,7 @@ func (p *Parser) expectEnd() bool {
 }
 
 // Parse
-func (p *Parser) Parse() []*Node {
+func (p *Parser) Parse(inside_block bool) []*Node {
 	nodes := []*Node{}
 	for p.currentToken().Kind != token.TOKEN_EOF {
 		switch p.currentToken().Kind {
@@ -314,6 +314,12 @@ func (p *Parser) Parse() []*Node {
 			x := p.parseVarStatement()
 			if x == nil { return nil }
 			nodes = append(nodes, x)
+		case token.TOKEN_CLOSECURLY:
+			if !inside_block {
+				p.ParseError("Unexpected }")
+				return nil
+			}
+			p.consume()
 		case token.TOKEN_IF:
 			x := p.parseIfStatement()
 			if x == nil { return nil }

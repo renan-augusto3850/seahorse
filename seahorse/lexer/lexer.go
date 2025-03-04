@@ -85,6 +85,10 @@ func Lexer(input string, filename string) []token.Token {
 			tree = append(tree, token.Token{Kind: token.TOKEN_OPENPAREN, Value: cStr, Filename: filename, Line: line, Col: col})
 		case cStr == ")":
 			tree = append(tree, token.Token{Kind: token.TOKEN_CLOSEPAREN, Value: cStr, Filename: filename, Line: line, Col: col})
+		case cStr == "{":
+			tree = append(tree, token.Token{Kind: token.TOKEN_OPENCURLY, Value: cStr, Filename: filename, Line: line, Col: col})
+		case cStr == "}":
+			tree = append(tree, token.Token{Kind: token.TOKEN_CLOSECURLY, Value: cStr, Filename: filename, Line: line, Col: col})
 		case unicode.IsLetter(c):
 			start := i
 			for i < len(code) && (unicode.IsLetter(rune(code[i])) || unicode.IsDigit(rune(code[i]))) {
