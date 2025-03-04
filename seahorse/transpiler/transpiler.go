@@ -48,7 +48,7 @@ func transpileVarStatement(expr *parser.Node) string {
 	return fmt.Sprintf("local %s = %s", expr.Value, transpileExpression(expr.Right))
 }
 
-func (i *Instance) Transpile() Module {
+func (i *Instance) Transpile(filename string) Module {
 	text := ""
 	for i.ip < len(i.input) {
 		stmt := i.input[i.ip]
@@ -61,7 +61,7 @@ func (i *Instance) Transpile() Module {
 		i.ip++
 	}
 	return Module{
-		Filename: "output.lua",
+		Filename: filename,
 		Text:     text,
 	}
 }

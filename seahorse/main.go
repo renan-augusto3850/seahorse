@@ -2,21 +2,57 @@ package main
 
 import (
 	"fmt"
+    "io/ioutil"
 	"seahorse/lexer"
 	"seahorse/parser"
 	"seahorse/transpiler"
+	"os"
+	"os/exec"
 )
 
 func main() {
-	input := "var a = 10\nprint(a"
-	tokens := lexer.Lexer(input, "file.se")
+	args := os.Args
+	if len(args) < 2 {
+		fmt.Printf("Usage: %s FILENAME\n", args[0])
+		fmt.Println("Positional argument FILENAME required.")
+		return
+	}
+
+	input_file, err := ioutil.ReadFile(args[1])
+    if err != nil {
+        fmt.Println("Could not read input file.")
+   		return
+    }
+
+    input := string(input_file)
+	tokens := lexer.Lexer(input, args[1])
 	p := parser.NewParser(tokens)
 	ast := p.Parse()
 	if ast == nil {
 		return
 	}
 	i := transpiler.NewInstance(ast)
-	fmt.Println(i.Transpile().Text)
+
+	x := i.Transpile(fmt.Sprintf("%s.lua", args[1]));
+
+	// Write transpiled result to file
+	file, err := os.Create(x.Filename)
+	if err != nil {
+		fmt.Println("Could not write output file.")
+		return
+	}
+	file.Write([]byte(x.Text))
+
+	// Run lua
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("lua %s", x.Filename))
+    stdout, err := cmd.Output()
+
+	if err != nil {
+        fmt.Println(err.Error())
+        return
+    }
+
+    fmt.Println(string(stdout))
 }
 
 // func printAST(node *parser.Node, indent int) {

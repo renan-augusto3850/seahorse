@@ -226,6 +226,9 @@ func (p *Parser) parseTerm() *Node {
 			Kind:  NODE_STRING,
 			Value: t.Value,
 		}
+	case token.TOKEN_LF:
+		p.consume()
+		return p.parseTerm()
 	}
 	p.ParseError(fmt.Sprintf("Unexpected token: %d", t.Kind))
 	return nil
@@ -276,6 +279,9 @@ func (p *Parser) Parse() []*Node {
 			x := p.parseVarStatement()
 			if x == nil { return nil }
 			nodes = append(nodes, x)
+		case token.TOKEN_LF:
+			p.consume()
+			continue
 		default:
 			x := p.parseExpression(0)
 			if x == nil { return nil }
