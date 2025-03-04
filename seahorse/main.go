@@ -28,6 +28,10 @@ func main() {
 	p := parser.NewParser(tokens)
 	ast := p.Parse()
 	if ast == nil {
+		err := p.Err;
+		fmt.Printf("Syntax error at %s:%d:%d near %s\n",
+					err.Filename, err.Line, err.Col, err.Near);
+		fmt.Printf("    %s\n", err.Message)
 		return
 	}
 	i := transpiler.NewInstance(ast)
