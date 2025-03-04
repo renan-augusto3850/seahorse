@@ -104,7 +104,7 @@ func getUnaryOperationPrecedence(kind int) int {
 // Parse expressions separated by ,
 func (p *Parser) parseArgumentList() []*Node {
 	list := []*Node{}
-	first := p.parseExpression(0)
+	first := p.parseExpression(0, true)
 	if first != nil {
 		list = append(list, first)
 	}
@@ -113,7 +113,7 @@ func (p *Parser) parseArgumentList() []*Node {
 			break
 		}
 		p.consume()
-		x := p.parseExpression(0)
+		x := p.parseExpression(0, false)
 		if x == nil {
 			p.ParseError("Expected expression after ','")
 			return nil
@@ -124,15 +124,17 @@ func (p *Parser) parseArgumentList() []*Node {
 }
 
 // Parse arbitrary expression
-func (p *Parser) parseExpression(precedence int) *Node {
-	node := p.parseTerm()
+func (p *Parser) parseExpression(precedence int, silent bool) *Node {
+	node := p.parseTerm(silent)
 	if node == nil { return nil }
 	if p.currentToken().Kind == token.TOKEN_OPENPAREN && node.Kind == NODE_ID {
 		p.consume()
 		list := p.parseArgumentList()
 		if list == nil { return nil }
 		if !p.expectToken(token.TOKEN_CLOSEPAREN) {
-			p.ParseError("Expected ')' after argument list.")
+			if !silent {
+				p.ParseError("Expected ')' after argument list.")
+			}
 			return nil
 		}
 		p.consume()
@@ -149,7 +151,7 @@ func (p *Parser) parseExpression(precedence int) *Node {
 			}
 			operator := p.currentToken()
 			p.consume()
-			rightNode := p.parseExpression(next_prec)
+			rightNode := p.parseExpression(next_prec, silent)
 			if rightNode == nil { return nil }
 			node = &Node{
 				Kind:  NODE_BINOP,
@@ -183,7 +185,7 @@ func (p *Parser) expectTokens(kinds []int) bool {
 }
 
 // Parse basic piece of an expression.
-func (p *Parser) parseTerm() *Node {
+func (p *Parser) parseTerm(silent bool) *Node {
 	t := p.currentToken()
 	switch t.Kind {
 	case token.TOKEN_NUMERIC:
@@ -197,20 +199,22 @@ func (p *Parser) parseTerm() *Node {
 		return &Node{
 			Kind:  NODE_UNOP,
 			Value: t.Value,
-			Right: p.parseExpression(getUnaryOperationPrecedence(token.TOKEN_NOT)),
+			Right: p.parseExpression(getUnaryOperationPrecedence(token.TOKEN_NOT), silent),
 		}
 	case token.TOKEN_MINUS:
 		p.consume()
 		return &Node{
 			Kind:  NODE_UNOP,
 			Value: t.Value,
-			Right: p.parseExpression(getUnaryOperationPrecedence(token.TOKEN_MINUS)),
+			Right: p.parseExpression(getUnaryOperationPrecedence(token.TOKEN_MINUS), silent),
 		}
 	case token.TOKEN_OPENPAREN:
 		p.consume()
-		node := p.parseExpression(0)
+		node := p.parseExpression(0, silent)
 		if !p.expectToken(token.TOKEN_CLOSEPAREN) {
-			p.ParseError("Expected ')' after expression.")
+			if !silent {
+				p.ParseError("Expected ')' after expression.")
+			}
 			return nil
 		}
 		return node
@@ -228,9 +232,11 @@ func (p *Parser) parseTerm() *Node {
 		}
 	case token.TOKEN_LF:
 		p.consume()
-		return p.parseTerm()
+		return p.parseTerm(silent)
 	}
-	p.ParseError(fmt.Sprintf("Unexpected token: %d", t.Kind))
+	if !silent {
+		p.ParseError(fmt.Sprintf("Unexpected token: %d", t.Kind))
+	}
 	return nil
 }
 
@@ -249,7 +255,7 @@ func (p *Parser) parseVarStatement() *Node {
 		return nil
 	}
 	p.consume()
-	expr := p.parseExpression(0)
+	expr := p.parseExpression(0, false)
 	if expr == nil {
 		p.ParseError("Expected expression")
 		return nil
@@ -283,7 +289,7 @@ func (p *Parser) Parse() []*Node {
 			p.consume()
 			continue
 		default:
-			x := p.parseExpression(0)
+			x := p.parseExpression(0, false)
 			if x == nil { return nil }
 			if !p.expectEnd() {
 				p.ParseError("Expected end of statement")

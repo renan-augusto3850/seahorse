@@ -2,6 +2,7 @@ package transpiler
 
 import (
 	"fmt"
+	"os"
 	"seahorse/parser"
 )
 
@@ -22,6 +23,29 @@ type Module struct {
 	Text     string
 }
 
+func transpileFunction(funcall *parser.Node) string {
+	function_name := funcall.Value
+	switch function_name {
+	case "printLog":
+		if len(funcall.List) != 1 {
+			fmt.Printf("printLog accepts only 1 argument but got %d\n", len(funcall.List))
+			os.Exit(1)
+		}
+		arg := funcall.List[0]
+		return fmt.Sprintf("print(%s)", transpileExpression(arg))
+	case "input":
+		if len(funcall.List) != 0 {
+			fmt.Printf("input accepts no arguments but got %d\n", len(funcall.List))
+			os.Exit(1)
+		}
+		return fmt.Sprintf("io.read()")
+	default:
+		fmt.Printf("Unknown function %s\n", function_name)
+		os.Exit(1)
+	}
+	return "nil"
+}
+
 func transpileExpression(expr *parser.Node) string {
 	switch expr.Kind {
 	case parser.NODE_NUMERIC, parser.NODE_STRING, parser.NODE_ID:
@@ -31,14 +55,7 @@ func transpileExpression(expr *parser.Node) string {
 	case parser.NODE_UNOP:
 		return fmt.Sprintf("(%s%s)", expr.Value, transpileExpression(expr.Right))
 	case parser.NODE_FUNCALL:
-		args := ""
-		for i, arg := range expr.List {
-			if i > 0 {
-				args += ","
-			}
-			args += transpileExpression(arg)
-		}
-		return fmt.Sprintf("%s(%s)", expr.Value, args)
+		return transpileFunction(expr)
 	default:
 		return ""
 	}
