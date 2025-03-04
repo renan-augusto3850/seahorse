@@ -1,6 +1,8 @@
 package token
 
 const (
+	TOKEN_UNK = iota
+	
 	TOKEN_ID      = iota // identifier
 	TOKEN_STRING  = iota // "string"
 	TOKEN_NUMERIC = iota // numeric

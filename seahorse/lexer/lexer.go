@@ -100,7 +100,9 @@ func Lexer(input string, filename string) []token.Token {
 			default:
 				tree = append(tree, token.Token{Kind: token.TOKEN_ID, Value: value, Filename: filename, Line: line, Col: col})
 				continue
-			} 
+			}
+		default:
+			tree = append(tree, token.Token{Kind: token.TOKEN_UNK, Value: cStr, Filename: filename, Line: line, Col: col})
 		}
 		i++
 		col++
