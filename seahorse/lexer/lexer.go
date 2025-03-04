@@ -95,6 +95,8 @@ func Lexer(input string, filename string) []token.Token {
 			switch value {
 			case "var":
 				tree = append(tree, token.Token{Kind: token.TOKEN_VAR, Value: value, Filename: filename, Line: line, Col: col})
+			case "if":
+				tree = append(tree, token.Token{Kind: token.TOKEN_IF, Value: value, Filename: filename, Line: line, Col: col})
 			default:
 				tree = append(tree, token.Token{Kind: token.TOKEN_ID, Value: value, Filename: filename, Line: line, Col: col})
 				continue

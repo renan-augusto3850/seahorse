@@ -9,6 +9,7 @@ const (
 
 	// Keyword
 	TOKEN_VAR = iota
+	TOKEN_IF  = iota
 
 	// Delimiter
 	TOKEN_OPENPAREN    = iota // (

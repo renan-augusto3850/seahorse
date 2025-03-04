@@ -48,8 +48,10 @@ func transpileFunction(funcall *parser.Node) string {
 
 func transpileExpression(expr *parser.Node) string {
 	switch expr.Kind {
-	case parser.NODE_NUMERIC, parser.NODE_STRING, parser.NODE_ID:
+	case parser.NODE_NUMERIC, parser.NODE_ID:
 		return expr.Value
+	case parser.NODE_STRING:
+		return fmt.Sprintf("\"%s\"", expr.Value)
 	case parser.NODE_BINOP:
 		return fmt.Sprintf("(%s %s %s)", transpileExpression(expr.Left), expr.Value, transpileExpression(expr.Right))
 	case parser.NODE_UNOP:
@@ -65,18 +67,28 @@ func transpileVarStatement(expr *parser.Node) string {
 	return fmt.Sprintf("local %s = %s", expr.Value, transpileExpression(expr.Right))
 }
 
-func (i *Instance) Transpile(filename string) Module {
+func transpileIfStatement(expr *parser.Node) string {
+	return fmt.Sprintf("if %s then\n%send", transpileExpression(expr.Right), transpileBlock(expr.List))
+}
+
+func transpileBlock(block []*parser.Node) string {
 	text := ""
-	for i.ip < len(i.input) {
-		stmt := i.input[i.ip]
+	for i := range block {
+		stmt := block[i]
 		switch stmt.Kind {
 		case parser.NODE_VAR:
 			text += transpileVarStatement(stmt) + "\n"
+		case parser.NODE_IF:
+			text += transpileIfStatement(stmt) + "\n"
 		default:
 			text += transpileExpression(stmt) + "\n"
 		}
-		i.ip++
 	}
+	return text
+}
+
+func (i *Instance) Transpile(filename string) Module {
+	text := transpileBlock(i.input)
 	return Module{
 		Filename: filename,
 		Text:     text,

@@ -7,7 +7,6 @@ import (
 	"seahorse/parser"
 	"seahorse/transpiler"
 	"os"
-	"os/exec"
 )
 
 func main() {
@@ -42,17 +41,6 @@ func main() {
 		return
 	}
 	file.Write([]byte(x.Text))
-
-	// Run lua
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("lua %s", x.Filename))
-    stdout, err := cmd.Output()
-
-	if err != nil {
-        fmt.Println(err.Error())
-        return
-    }
-
-    fmt.Println(string(stdout))
 }
 
 // func printAST(node *parser.Node, indent int) {

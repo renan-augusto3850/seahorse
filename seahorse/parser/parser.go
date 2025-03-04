@@ -13,6 +13,7 @@ const (
 	NODE_ID      = iota // foo, bar, baz
 	NODE_FUNCALL = iota // foo(), bar(), baz()
 	NODE_VAR     = iota // var foo = bar
+	NODE_IF      = iota // if expr { block }
 )
 
 // Error function to log syntax errors.
@@ -272,6 +273,24 @@ func (p *Parser) parseVarStatement() *Node {
 	}
 }
 
+// Parse if statement
+func (p *Parser) parseIfStatement() *Node {
+	p.expectToken(token.TOKEN_IF)
+	p.consume()
+	expr := p.parseExpression(0, false)
+	p.expectToken(token.TOKEN_OPENCURLY)
+	p.consume()
+	block := p.Parse()
+	if block == nil { return nil }
+	p.expectToken(token.TOKEN_CLOSECURLY)
+	p.consume()
+	return &Node {
+		Kind: NODE_IF,
+		Right: expr,
+		List: block,
+	}
+}
+
 func (p *Parser) expectEnd() bool {
 	return p.expectTokens([]int{token.TOKEN_EOF, token.TOKEN_LF})
 }
@@ -283,6 +302,10 @@ func (p *Parser) Parse() []*Node {
 		switch p.currentToken().Kind {
 		case token.TOKEN_VAR:
 			x := p.parseVarStatement()
+			if x == nil { return nil }
+			nodes = append(nodes, x)
+		case token.TOKEN_IF:
+			x := p.parseIfStatement()
 			if x == nil { return nil }
 			nodes = append(nodes, x)
 		case token.TOKEN_LF:
